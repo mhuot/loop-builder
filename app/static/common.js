@@ -1,0 +1,64 @@
+// Helpers shared by the home and editor pages.
+"use strict";
+
+const $ = (sel) => document.querySelector(sel);
+const el = (tag, attrs = {}, ...kids) => {
+  const node = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "on") Object.entries(v).forEach(([ev, fn]) => node.addEventListener(ev, fn));
+    else if (k === "value") node.value = v;
+    else if (k === "checked") node.checked = !!v;
+    else if (v !== false && v != null) node.setAttribute(k, v === true ? "" : v);
+  }
+  node.append(...kids.flat().filter((k) => k != null && k !== false));
+  return node;
+};
+const clock = (s) => (s == null ? "—" : `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, "0")}`);
+const isJson = (res) => !!res.headers.get("content-type")?.includes("json");
+// Why a request failed, in words: the server's reason when it gave one, else a plain line. An unexpected server
+// error answers in plain text ("Internal Server Error"), which must never surface as a JSON parse error.
+const failure = async (res) => {
+  const data = isJson(res) ? await res.json().catch(() => null) : null;
+  const detail = data && data.detail;
+  if (Array.isArray(detail)) return detail.map((d) => d.msg || String(d)).join("; "); // a request FastAPI refused
+  return detail || `Something went wrong in Loop Builder (error ${res.status}). Details are in loop-builder.log in the Loop Builder folder, or in the terminal when started with --browser.`;
+};
+const api = async (url, method = "GET", body) => {
+  const res = await fetch(url, { method, headers: body ? { "Content-Type": "application/json" } : {},
+    body: body ? JSON.stringify(body) : undefined });
+  if (!res.ok) throw new Error(await failure(res));
+  return isJson(res) ? res.json() : null;
+};
+const upload = async (url, file) => {
+  const form = new FormData();
+  form.append("file", file);
+  const res = await fetch(url, { method: "POST", body: form });
+  if (!res.ok) throw new Error(await failure(res));
+  return res.json();
+};
+
+// The app window offers the system's own pickers; a browser tab (developer use) falls back to typing a path.
+const native = () => (window.pywebview && window.pywebview.api) || null;
+// An event's date (kept as 2026-10-31) the way this computer writes dates: "Sat, Oct 31, 2026".
+const niceDate = (iso) => {
+  const d = iso && new Date(`${iso}T12:00:00`);
+  return d && !isNaN(d) ? d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" }) : iso || "";
+};
+// The app window must fit the screen: one taller than the screen hides the bottom of every page, and dialogs'
+// buttons with it. The page measures the usable screen (without the taskbar) in its own pixels, which are the
+// window's logical pixels whatever the resolution and display scaling; the app fits the window if it spills over.
+window.addEventListener("pywebviewready", () => {
+  const s = window.screen;
+  if (native() && native().fit_screen) native().fit_screen(s.availLeft ?? 0, s.availTop ?? 0, s.availWidth, s.availHeight);
+});
+async function pickFolder(input) {
+  if (!native()) { input.focus(); return null; }
+  const folder = await native().pick_folder(input.value || "");
+  if (folder) input.value = folder;
+  return folder;
+}
+
+// Theme colors by role (Settings → Team theme, and each event's own theme in the editor).
+const COLORS = [["primary", "Primary", "bars, outlines"], ["accent", "Accent", "accent lines"], ["text", "Text", ""],
+  ["muted", "Muted", "sublabels, captions"], ["background", "Background", ""]];
+const DEFAULTS = { primary: "#CC0202", accent: "#F0C878", text: "#FFFFFF", muted: "#AAAAAA", background: "#000000" };

@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Loop Builder: video loops for swim scoreboards</title>
+<meta name="description" content="Loop Builder makes the welcome screens, countdowns, lane assignments and QR slides that play on a DisplayLink Plus swim scoreboard. Free, for Windows and Mac.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --tile: #e9f3f5;
+    --grout: #d3e5e9;
+    --water: #0b7fa8;
+    --deep: #0a2c42;
+    --rope: #d4382d;
+    --buoy: #f3bf3a;
+    --paper: #ffffff;
+    --ink: #0a2c42;
+    --ink-soft: #3e5c6e;
+    --display: "Barlow Condensed", "Arial Narrow", sans-serif;
+    --body: "Barlow", "Helvetica Neue", Arial, sans-serif;
+    --measure: 62ch;
+    --gutter: clamp(16px, 4vw, 48px);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: var(--body);
+    font-size: 1.125rem;
+    line-height: 1.55;
+    color: var(--ink);
+    background-color: var(--tile);
+    /* pool tile: a square grid of grout lines */
+    background-image:
+      linear-gradient(var(--grout) 2px, transparent 2px),
+      linear-gradient(90deg, var(--grout) 2px, transparent 2px);
+    background-size: 72px 72px;
+  }
+  a { color: var(--water); text-underline-offset: 0.18em; }
+  a:focus-visible, button:focus-visible { outline: 3px solid var(--rope); outline-offset: 3px; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 var(--gutter); }
+
+  /* ---------- top bar ---------- */
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 0; }
+  .name { font-family: var(--display); font-weight: 800; font-size: 1.6rem; letter-spacing: 0.01em; color: var(--deep); text-decoration: none; }
+  .top nav { display: flex; gap: clamp(12px, 2.5vw, 28px); font-weight: 500; }
+  .top nav a { color: var(--deep); text-decoration: none; }
+  .top nav a:hover { text-decoration: underline; }
+
+  /* ---------- hero ---------- */
+  .hero { padding: clamp(24px, 5vw, 64px) 0 clamp(40px, 6vw, 80px); }
+  .hero h1 {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: clamp(3.2rem, 9.5vw, 8rem);
+    line-height: 0.9;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+    margin: 0 0 0.3em;
+    color: var(--deep);
+    max-width: 14ch;
+  }
+  .hero .lede { max-width: 46ch; font-size: clamp(1.15rem, 1.6vw, 1.4rem); margin: 0 0 1.6em; color: var(--ink-soft); }
+  .hero-grid { display: grid; grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr); gap: clamp(24px, 4vw, 56px); align-items: start; }
+  .actions { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; }
+  .btn {
+    display: inline-block; font-family: var(--display); font-weight: 700; font-size: 1.35rem; letter-spacing: 0.02em;
+    padding: 0.5em 1.1em; background: var(--rope); color: #fff; text-decoration: none; border-radius: 4px;
+    box-shadow: 0 4px 0 #8f2119;
+  }
+  .btn:hover { background: #bf2f25; }
+  .btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #8f2119; }
+  .actions small { font-size: 0.95rem; color: var(--ink-soft); }
+
+  /* ---------- the board ---------- */
+  .board-mount { position: relative; }
+  .board {
+    position: relative;
+    background: #000;
+    border: clamp(8px, 1.4vw, 16px) solid #16191c;
+    border-radius: 6px;
+    box-shadow: 0 2px 0 #2c3136 inset, 0 28px 50px -18px rgba(10, 44, 66, 0.55);
+    aspect-ratio: 320 / 176;
+    overflow: hidden;
+  }
+  .board img {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    image-rendering: pixelated;
+    opacity: 0; transition: opacity 0.5s ease;
+  }
+  .board img.on { opacity: 1; }
+  /* LED pitch: one dark ring per board pixel */
+  .board::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background-image: radial-gradient(circle, transparent 52%, rgba(0, 0, 0, 0.5) 78%);
+    background-size: calc(100% / 320) calc(100% / 176);
+  }
+  .board-caption { display: flex; justify-content: space-between; gap: 12px; margin-top: 10px; font-size: 0.95rem; color: var(--ink-soft); }
+
+  .types { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 18px 0 0; }
+  .types button {
+    font: 600 1rem var(--body); color: var(--deep); background: var(--paper);
+    border: 2px solid var(--deep); border-radius: 999px; padding: 0.3em 0.95em; cursor: pointer;
+  }
+  .types button[aria-pressed="true"] { background: var(--deep); color: #fff; }
+  .types-note { margin: 12px 0 0; font-size: 0.98rem; color: var(--ink-soft); max-width: 60ch; }
+
+  /* ---------- lane rope divider ---------- */
+  .rope {
+    height: 18px; border: 0; margin: 0;
+    background: repeating-linear-gradient(90deg,
+      var(--rope) 0 42px, #fff 42px 84px, var(--water) 84px 126px, #fff 126px 168px);
+    box-shadow: 0 3px 0 rgba(10, 44, 66, 0.18);
+  }
+
+  /* ---------- sections ---------- */
+  section { padding: clamp(48px, 7vw, 96px) 0; }
+  h2 {
+    font-family: var(--display); font-weight: 800; text-transform: uppercase;
+    font-size: clamp(2.2rem, 5vw, 3.8rem); line-height: 0.95; margin: 0 0 0.5em; color: var(--deep);
+    max-width: 16ch;
+  }
+  h3 { font-family: var(--display); font-weight: 700; font-size: 1.7rem; line-height: 1.1; margin: 0 0 0.3em; }
+  p { margin: 0 0 1em; max-width: var(--measure); }
+
+  .window { margin: 1.5em 0 0; background: #16191c; border-radius: 10px; overflow: hidden; box-shadow: 0 30px 60px -24px rgba(10, 44, 66, 0.6); }
+  .window-bar { display: flex; gap: 8px; padding: 12px 14px; }
+  .window-bar span { width: 12px; height: 12px; border-radius: 50%; background: #3a4046; }
+  .window img { display: block; width: 100%; height: auto; }
+  .callouts { list-style: none; padding: 0; margin: 2em 0 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(20px, 4vw, 56px); }
+  .callouts li { border-top: 2px solid var(--deep); padding-top: 16px; }
+  .callouts p { margin: 0; font-size: 1.05rem; color: var(--ink-soft); }
+
+  .why { background: var(--deep); color: #e3f0f4; }
+  .why h2 { color: #fff; }
+  .why .cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(24px, 5vw, 72px); }
+  .why h3 { color: var(--buoy); }
+  .why p { color: #cfe2e8; }
+
+  .steps { list-style: none; counter-reset: step; padding: 0; margin: 2em 0 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(20px, 3vw, 40px); }
+  .steps li { counter-increment: step; background: var(--paper); padding: 28px 26px 24px; border-top: 8px solid var(--water); }
+  .steps li::before {
+    content: counter(step); display: block; font-family: var(--display); font-weight: 800;
+    font-size: 4.5rem; line-height: 0.8; color: var(--water); margin-bottom: 0.25em;
+  }
+  .steps p { font-size: 1.05rem; margin: 0; }
+
+  .facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 clamp(24px, 5vw, 72px); margin-top: 1.5em; padding: 0; list-style: none; }
+  .facts li { padding: 20px 0; border-top: 2px solid var(--deep); }
+  .facts p { margin: 0; font-size: 1.05rem; color: var(--ink-soft); }
+
+  .strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 2em; }
+  .strip figure { margin: 0; }
+  .strip img { display: block; width: 100%; image-rendering: pixelated; border: 5px solid #16191c; border-radius: 3px; background: #000; }
+  .strip figcaption { font-size: 0.95rem; margin-top: 6px; color: var(--ink-soft); }
+
+  .get { background: var(--water); color: #fff; }
+  .get h2 { color: #fff; }
+  .get p { color: #e6f4f9; }
+  .get a { color: #fff; }
+  .get .btn { background: var(--buoy); color: var(--deep); box-shadow: 0 4px 0 #a97e12; }
+  .get .btn:hover { background: #f7cb57; }
+  .get dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(16px, 3vw, 40px); margin: 2em 0 0; }
+  .get dt { font-family: var(--display); font-weight: 700; font-size: 1.5rem; }
+  .get dd { margin: 0; color: #e6f4f9; font-size: 1.02rem; }
+
+  footer { padding: 36px 0 56px; font-size: 0.95rem; color: var(--ink-soft); }
+  footer p { max-width: 80ch; }
+
+  @media (max-width: 860px) {
+    .hero-grid, .why .cols, .steps, .facts, .get dl, .callouts { grid-template-columns: 1fr; }
+    .strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .top nav a.optional { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .board img { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <a class="name" href="#top">Loop Builder</a>
+    <nav aria-label="Page">
+      <a class="optional" href="#editor">The editor</a>
+      <a class="optional" href="#how">How it works</a>
+      <a class="optional" href="#features">Features</a>
+      <a href="#get">Download</a>
+      <a href="https://github.com/mhuot/loop-builder">GitHub</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <div class="hero">
+      <h1>Put your meet on the board</h1>
+      <div class="hero-grid">
+        <div>
+          <p class="lede">Loop Builder makes the videos your pool scoreboard plays when it isn't showing times: welcome screens, warm-up countdowns, lane assignments, meet program QR codes and thank-yous.</p>
+          <div class="actions">
+            <a class="btn" href="#get">Download Loop Builder</a>
+            <small>Free for Windows and Mac. Built for DisplayLink Plus boards.</small>
+          </div>
+        </div>
+
+        <div class="board-mount">
+          <div class="board" id="board" role="img" aria-label="A scoreboard playing slides made with Loop Builder">
+            <img src="shots/card.png" alt="" class="on" data-type="card">
+            <img src="shots/lanes.png" alt="" data-type="lanes">
+            <img src="shots/qr.png" alt="" data-type="qr">
+            <img src="shots/countdown.webp" alt="" data-type="countdown">
+            <img src="shots/crawl.webp" alt="" data-type="crawl">
+            <img src="shots/image.png" alt="" data-type="image">
+          </div>
+          <div class="board-caption">
+            <span id="caption">Card: text in five fixed layouts, with your logo</span>
+            <span>320 × 176 pixels, shown exactly as exported</span>
+          </div>
+          <ul class="types" aria-label="Slide types">
+            <li><button type="button" aria-pressed="true" data-show="card" data-caption="Card: text in five fixed layouts, with your logo">Card</button></li>
+            <li><button type="button" aria-pressed="false" data-show="lanes" data-caption="Lanes: guest teams by lane, from your team library">Lanes</button></li>
+            <li><button type="button" aria-pressed="false" data-show="qr" data-caption="QR: checked to make sure it scans to your link">QR</button></li>
+            <li><button type="button" aria-pressed="false" data-show="countdown" data-caption="Countdown: warm-ups and breaks, to the second">Countdown</button></li>
+            <li><button type="button" aria-pressed="false" data-show="crawl" data-caption="Crawl: a message that scrolls across the board">Crawl</button></li>
+            <li><button type="button" aria-pressed="false" data-show="image" data-caption="Image: any picture, framed to fit, with an optional pan">Image</button></li>
+          </ul>
+          <p class="types-note">A seventh type, Board, draws a slide from one of your own DisplayLink Plus templates. The teams shown here are made up.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<hr class="rope" aria-hidden="true">
+
+<section class="editor" id="editor">
+  <div class="wrap">
+    <h2>Drag, type, and see the board as you go</h2>
+    <figure class="window">
+      <div class="window-bar" aria-hidden="true"><span></span><span></span><span></span></div>
+      <img src="shots/editor.webp" width="2160" height="1290" alt="The Loop Builder editor: slide types on the left, the loop's slides in the middle, and a large preview of the selected welcome slide with its layout choices on the right.">
+    </figure>
+    <ul class="callouts">
+      <li><h3>Slide types on the left</h3><p>Drag one into the loop, or click to add it after the slide you have selected.</p></li>
+      <li><h3>The loop in the middle</h3><p>Every slide in order, with how long each one holds and the loop's total running time.</p></li>
+      <li><h3>The board on the right</h3><p>The selected slide, drawn by the same renderer as the export, with its layout and text just below.</p></li>
+    </ul>
+  </div>
+</section>
+
+<section class="why">
+  <div class="wrap">
+    <h2>The board is free more often than it is busy</h2>
+    <div class="cols">
+      <div>
+        <h3>Without Loop Builder</h3>
+        <p>Every loop has to be a WMV at the board's exact pixel size. Making one takes an image tool, a video encoder and a lot of trial and error, and you only find out how it looks once it is up on the wall.</p>
+      </div>
+      <div>
+        <h3>With Loop Builder</h3>
+        <p>You drag slides into a loop, type the words, and watch a preview drawn by the same renderer that makes the video. What you see is the file the board will play, pixel for pixel.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <h2>From blank event to the board in three steps</h2>
+    <ol class="steps">
+      <li>
+        <h3>Build the loops</h3>
+        <p>Start from a dual meet, Sections, True Team or blank event. Drag in slides, pick a layout, and type. Your team colors and logo are already applied.</p>
+      </li>
+      <li>
+        <h3>Check before you export</h3>
+        <p>Loop Builder confirms that every QR code scans to its link, every line of text fits, and every picture is present.</p>
+      </li>
+      <li>
+        <h3>Export and play</h3>
+        <p>Each loop becomes a WMV at 30 frames per second, sized for your board. Add it to DisplayLink Plus and press play.</p>
+      </li>
+    </ol>
+
+    <div class="strip">
+      <figure><img src="shots/card.png" alt="Welcome slide for a guest team" width="320" height="176"><figcaption>Welcome the guest team</figcaption></figure>
+      <figure><img src="shots/diving.png" alt="Diving etiquette slide" width="320" height="176"><figcaption>Diving etiquette</figcaption></figure>
+      <figure><img src="shots/senior.png" alt="Senior night slide" width="320" height="176"><figcaption>Senior night</figcaption></figure>
+      <figure><img src="shots/countdown.webp" alt="Warm-up countdown, ticking down from 7:42" width="320" height="176"><figcaption>Warm-up countdown</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<hr class="rope" aria-hidden="true">
+
+<section id="features">
+  <div class="wrap">
+    <h2>Made for the volunteer at the timing table</h2>
+    <ul class="facts">
+      <li><h3>One file per meet</h3><p>Every loop for a meet lives in one event, so next week's meet starts as a copy of this one.</p></li>
+      <li><h3>Your team's look, once</h3><p>Set your colors and logo in Settings and every new event starts with them. Any event can change its own.</p></li>
+      <li><h3>A team library for lanes</h3><p>Save the teams you swim against, with logos, and drop them onto lane assignment slides.</p></li>
+      <li><h3>Hard to lose work</h3><p>Autosave, undo and redo, and a version kept each time you export.</p></li>
+      <li><h3>Move between computers</h3><p>Pack an event into a single <code>.loopevent</code> file and open it on the laptop at the pool.</p></li>
+      <li><h3>Works with no internet</h3><p>Events, templates and pictures stay on your computer. Nothing about you or your events is collected or sent.</p></li>
+    </ul>
+  </div>
+</section>
+
+<section class="get" id="get">
+  <div class="wrap">
+    <h2>Get Loop Builder</h2>
+    <p>Download the Windows installer or portable zip, or the Mac disk image, from the latest release.</p>
+    <p><a class="btn" href="https://github.com/mhuot/loop-builder/releases/latest">Go to the latest release</a></p>
+    <dl>
+      <div><dt>Signed</dt><dd>The Windows files are signed through Microsoft Artifact Signing. The Mac app is signed with an Apple Developer ID and notarized by Apple.</dd></div>
+      <div><dt>Free and open source</dt><dd>Apache License 2.0. The source is on <a href="https://github.com/mhuot/loop-builder">GitHub</a>.</dd></div>
+      <div><dt>Help</dt><dd>Report a problem or ask for a feature in <a href="https://github.com/mhuot/loop-builder/issues">Issues</a>.</dd></div>
+    </dl>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>Copyright 2026 Mike Huot. Loop Builder is not affiliated with Colorado Time Systems; DisplayLink Plus is their product. DisplayLink Plus templates come with that software, not with Loop Builder.</p>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var slides = document.querySelectorAll("#board img");
+    var buttons = document.querySelectorAll(".types button");
+    var caption = document.getElementById("caption");
+    var index = 0, timer = null;
+
+    function show(i) {
+      index = i;
+      var type = buttons[i].dataset.show;
+      slides.forEach(function (s) { s.classList.toggle("on", s.dataset.type === type); });
+      buttons.forEach(function (b, k) { b.setAttribute("aria-pressed", k === i ? "true" : "false"); });
+      caption.textContent = buttons[i].dataset.caption;
+    }
+    function stop() { if (timer) { clearInterval(timer); timer = null; } }
+
+    buttons.forEach(function (b, i) {
+      b.addEventListener("click", function () { stop(); show(i); });
+    });
+    // plays like a loop until someone picks a slide
+    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      timer = setInterval(function () { show((index + 1) % buttons.length); }, 4000);
+    }
+  })();
+</script>
+</body>
+</html>
