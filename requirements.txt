@@ -6,4 +6,4 @@ av>=19.0.2,<20
 fastapi>=0.159.1
 uvicorn>=0.30
 pywebview>=6.2.1,<7
-python-multipart>=0.0.9
+python-multipart>=0.0.33
