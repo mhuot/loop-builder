@@ -2,7 +2,7 @@
 
 **Put your meet on the board.** Loop Builder makes the videos a pool scoreboard plays when it isn't showing
 times: welcome screens, warm-up countdowns, lane assignments, meet program QR codes and thank-yous. It is free,
-runs on Windows and Mac, and is built for DisplayLink Plus boards.
+runs on Windows and on Macs with Apple silicon, and is built for DisplayLink Plus boards.
 
 [Download the latest release](https://github.com/mhuot/loop-builder/releases/latest) ·
 [See the project page](https://mhuot.github.io/loop-builder/)
@@ -43,6 +43,9 @@ Get the latest Windows installer (or portable zip) and Mac .dmg from
 [Releases](https://github.com/mhuot/loop-builder/releases/latest). Both are signed: the Windows files by
 Mike Huot through Microsoft Artifact Signing, and the Mac app with an Apple Developer ID, notarized by Apple.
 Loop Builder checks for a newer release when it starts and says so on the events page.
+
+The Mac app needs a Mac with Apple silicon (M1 or later). It does not run on Intel Macs, and an Intel build is
+not planned.
 
 ## Quick Start
 
