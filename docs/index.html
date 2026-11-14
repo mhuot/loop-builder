@@ -134,6 +134,11 @@
   .callouts li { border-top: 2px solid var(--deep); padding-top: 16px; }
   .callouts p { margin: 0; font-size: 1.05rem; color: var(--ink-soft); }
 
+  .more-ui { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: clamp(20px, 3vw, 40px); align-items: start; margin-top: clamp(32px, 5vw, 64px); }
+  .more-ui .window { margin: 0; }
+  .more-ui figcaption { background: var(--paper); padding: 18px 22px 20px; }
+  .more-ui figcaption p { margin: 0; font-size: 1.05rem; color: var(--ink-soft); }
+
   .why { background: var(--deep); color: #e3f0f4; }
   .why h2 { color: #fff; }
   .why .cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(24px, 5vw, 72px); }
@@ -171,7 +176,7 @@
   footer p { max-width: 80ch; }
 
   @media (max-width: 860px) {
-    .hero-grid, .why .cols, .steps, .facts, .get dl, .callouts { grid-template-columns: 1fr; }
+    .hero-grid, .why .cols, .steps, .facts, .get dl, .callouts, .more-ui { grid-template-columns: 1fr; }
     .strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .top nav a.optional { display: none; }
   }
@@ -249,6 +254,17 @@
       <li><h3>The loop in the middle</h3><p>Every slide in order, with how long each one holds and the loop's total running time.</p></li>
       <li><h3>The board on the right</h3><p>The selected slide, drawn by the same renderer as the export, with its layout and text just below.</p></li>
     </ul>
+    <div class="more-ui">
+      <figure class="window">
+        <div class="window-bar" aria-hidden="true"><span></span><span></span><span></span></div>
+        <img src="shots/home.webp" width="2160" height="1328" loading="lazy" alt="The events home: four starters (Dual meet, Sections, True Team and Blank) above a list of three saved events, each with a thumbnail, its loops and Open, Duplicate, Save and Delete buttons.">
+        <figcaption><h3>Every meet in one place</h3><p>Start from a dual meet, Sections, True Team or blank event. Last week's meet is one Duplicate away from being this week's.</p></figcaption>
+      </figure>
+      <figure class="window">
+        <img src="shots/export.webp" width="1433" height="1073" loading="lazy" alt="The Export loops dialog: three loops ticked with their running times, an export folder, and choices to make a WMV video for each loop, PNG images of still slides, and an MP4 to review.">
+        <figcaption><h3>Export only what you need</h3><p>Pick the loops and the folder. Each loop becomes a WMV for the board, with optional PNG stills and an MP4 to review on a laptop.</p></figcaption>
+      </figure>
+    </div>
   </div>
 </section>
 
