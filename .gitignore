@@ -12,3 +12,4 @@ packaging/windows/MicrosoftEdgeWebview2Setup.exe
 *.loopevent
 .DS_Store
 .pytest_cache/
+!docs/*.mp4

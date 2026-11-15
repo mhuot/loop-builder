@@ -126,6 +126,8 @@
   h3 { font-family: var(--display); font-weight: 700; font-size: 1.7rem; line-height: 1.1; margin: 0 0 0.3em; }
   p { margin: 0 0 1em; max-width: var(--measure); }
 
+  .watch { padding-bottom: 0; }
+  .promo { display: block; width: 100%; height: auto; margin-top: 1.5em; background: #000; border: 10px solid #16191c; border-radius: 8px; box-shadow: 0 30px 60px -24px rgba(10, 44, 66, 0.6); }
   .window { margin: 1.5em 0 0; background: #16191c; border-radius: 10px; overflow: hidden; box-shadow: 0 30px 60px -24px rgba(10, 44, 66, 0.6); }
   .window-bar { display: flex; gap: 8px; padding: 12px 14px; }
   .window-bar span { width: 12px; height: 12px; border-radius: 50%; background: #3a4046; }
@@ -192,6 +194,7 @@
   <header class="top">
     <a class="name" href="#top">Loop Builder</a>
     <nav aria-label="Page">
+      <a class="optional" href="#watch">Video</a>
       <a class="optional" href="#editor">The editor</a>
       <a class="optional" href="#how">How it works</a>
       <a class="optional" href="#features">Features</a>
@@ -241,6 +244,16 @@
 </div>
 
 <hr class="rope" aria-hidden="true">
+
+<section class="watch" id="watch">
+  <div class="wrap">
+    <h2>Watch it in under a minute</h2>
+    <video class="promo" controls preload="none" poster="shots/promo-poster.jpg" width="1920" height="1080">
+      <source src="loop-builder-promo.mp4" type="video/mp4">
+      <a href="loop-builder-promo.mp4">Download the video (MP4)</a>
+    </video>
+  </div>
+</section>
 
 <section class="editor" id="editor">
   <div class="wrap">

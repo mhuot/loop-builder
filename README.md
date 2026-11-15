@@ -7,6 +7,10 @@ runs on Windows and on Macs with Apple silicon, and is built for DisplayLink Plu
 [Download the latest release](https://github.com/mhuot/loop-builder/releases/latest) ·
 [See the project page](https://mhuot.github.io/loop-builder/)
 
+[![Watch the 55-second Loop Builder video](docs/shots/promo-poster.jpg)](https://mhuot.github.io/loop-builder/loop-builder-promo.mp4)
+
+Watch the [55-second video](https://mhuot.github.io/loop-builder/loop-builder-promo.mp4).
+
 ![The Loop Builder editor: slide types on the left, the loop's slides in the middle, and a preview of the selected slide on the right](docs/shots/editor.webp)
 
 Every slide below was drawn by Loop Builder at a board's real size, 320 × 176 pixels. The teams are made up.
